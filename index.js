@@ -13,7 +13,7 @@ const STOP_MESSAGE = 'Goodbye!';
 const AUDIO='<audio src=\'https://s3.amazonaws.com/ask-soundlibrary/nature/amzn_sfx_ocean_wave_surf_01.mp3\'/>';
 
 const DONE_MSG0='Say done to continue:';
-const DONE_MSG='Say done to continue after nature music ends:';
+const DONE_MSG='Say done after nature music ends:';
 const STAND_MSG="Stand straight  ";
 const SHOULDER_MSG="Keep your shoulders relaxed and down.  ";
 const FOUR_MSG="Do this for four times.  Every time try to stretch a little more. ";
@@ -31,13 +31,15 @@ const DOWN_MSG="Slowly look down to our chest and back to square.  ";
 var trainAction;
 var actionPlayed;
 var direction;
+var numPlayedAll
 
 
 const handlers = {
     'LaunchRequest': function () {
         trainAction = 0;
 		actionPlayed = 0;
-		direction=0;		
+		direction=0;
+		numPlayedAll=0;
 
 		const speechOutput = START_MESSAGE + STAND_MSG + SHOULDER_MSG+DONE_MSG0;
         this.emit(':ask',speechOutput,DONE_MSG0);
@@ -45,7 +47,8 @@ const handlers = {
 	'StartTrainingIntent': function () {
         trainAction = 0;
 		actionPlayed = 0;
-		direction=0;		
+		direction=0;	
+		numPlayedAll=0;
 
 		const speechOutput = START_MESSAGE + STAND_MSG + SHOULDER_MSG+DONE_MSG0;
         this.emit(':ask',speechOutput,DONE_MSG0);
@@ -54,6 +57,8 @@ const handlers = {
 		var PosMsg;
 		var ActMsg;
 		var NumMsg;
+		
+		numPlayedAll++;
 		
 		if (trainAction==0) {
 			ActMsg=ROT_MSG;
@@ -67,15 +72,16 @@ const handlers = {
 			this.response.speak('You have given your neck some rest. Wish you good fit every day.');        
 			this.emit(':responseReady');
 		}
-		trainAction=trainAction+direction*actionPlayed;
+		
 		
 		if (direction==0) {
 			PosMsg=POS_MSG0;
 		} else {
 			PosMsg=POS_MSG1;
 		}
-		//01010101
+		//12345678
 		//00110011
+		//01010101
 		//direction=1-direction;
 		
 		if (actionPlayed==0) {
@@ -85,9 +91,13 @@ const handlers = {
 			NumMsg=HOLD_MSG;
 			direction=1-direction;
 		}
+		
 		actionPlayed= 1-actionPlayed;
+		
+		//direction=1-Math.floor(numPlayedAll/2)%2;
+		trainAction=Math.floor(numPlayedAll/4);
 
-		const speechOutput = PosMsg + ActMsg + NumMsg+DONE_MSG+AUDIO+AUDIO+AUDIO+AUDIO+AUDIO;
+		const speechOutput = PosMsg + ActMsg + NumMsg+DONE_MSG+AUDIO+AUDIO+AUDIO+AUDIO;
 		this.emit(':ask',speechOutput,DONE_MSG);
 	},
 	"AMAZON.NoIntent": function() {
@@ -106,8 +116,8 @@ const handlers = {
         this.emit(':tell', STOP_MESSAGE);
     },
 	'Unhandled': function () {
-		this.emit(':tell', STOP_MESSAGE);
-        //this.emit(':responseReady');
+		const speechOutput = DONE_MSG0;
+		this.emit(':ask',speechOutput,speechOutput);
     },
 };
 
